@@ -99,6 +99,8 @@ mod interfaz_tests;
 mod browser_tests;
 #[cfg(test)]
 mod scroll_tests;
+#[cfg(test)]
+mod readme_shots;
 mod project;
 mod recording;
 mod recovery;

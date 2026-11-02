@@ -106,6 +106,7 @@ mod returns;
 mod rumble;
 mod sample_editor;
 mod session;
+mod sidechain;
 mod session_rec;
 mod scene;
 mod search;

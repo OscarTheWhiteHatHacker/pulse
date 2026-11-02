@@ -1197,6 +1197,8 @@ Pulse toca contigo: a partir de un clip con acordes escribe un bajo, un arpegio,
 
 El clip se llama como lo que toca («Bajo: contratiempo»). Una pista nueva llega con un instrumento que le va: Acid para los bajos, FM para los arpegios y SuperSaw para el pad. Cámbialo como cualquier otro.
 
+Cada papel tiene su color, el mismo en todas las canciones: azul los bajos, turquesa los arpegios, violeta el pad, lila los acordes rítmicos y naranja la melodía. Si los acordes ya tienen ese color, la pista nueva toma el siguiente de la paleta.
+
 Entra con el fader de la pista de los acordes (el arpegio y el pad, 1,5 dB por debajo), para que al sumar un bajo, un pad y un arpegio la mezcla no pase de 0 dB.
 
 ### Las partes
@@ -1226,6 +1228,7 @@ Suena a canción, no a notas al azar:
 
 - En cada tiempo fuerte toca una nota del acorde que suena; entre medias, notas de la escala que van por grados. Nunca choca un semitono con el acorde en un tiempo fuerte.
 - Un motivo de uno o dos compases se repite por todo el clip y se adapta a cada acorde.
+- La melodía tiene contorno: sube cuando el motivo sube y baja cuando baja, con un punto alto en cada frase. En los tiempos fuertes elige, entre las notas del acorde, la que va en esa dirección, no siempre la más cercana. Ninguna nota pasa de la mitad de la melodía, ni con **Pocas notas**.
 - Las frases van en parejas: la primera queda abierta y la segunda cierra en la tónica o la fundamental del acorde, igual que el final del clip.
 - Sigue el compás del clip (4/4, 3/4, 6/8…) y su largo.
 
@@ -1233,7 +1236,7 @@ En el [[Editor MIDI]] de la melodía, junto a **Otra variación**, tienes tres d
 
 - **Estilo**: la misma toma en otro estilo. El clip cambia de nombre si aún se llama como el estilo.
 - **Densidad**: **Pocas notas**, **Normal** o **Muchas notas**.
-- **Registro**: **Grave** (Do3–Sol4), **Medio** (La3–Mi5) o **Agudo** (Sol4–Re6).
+- **Registro**: **Grave** (C2–G3), **Medio** (A2–E4) o **Agudo** (G3–D5), con los nombres de notas del editor (C3 es el do central).
 
 Cambiarlos reescribe la misma toma; **Otra variación** escribe otra.
 
@@ -1478,7 +1481,8 @@ Las estructuras:
 
 - Cada parte toma una escena (ver «Cómo elige» abajo).
 - Cada parte lleva solo las pistas que le tocan según su **papel**: sin bajo en la intro, sin batería en el break… En el estribillo o el drop suena todo: si una pista no tiene clip en esa escena, trae el suyo de otra.
-- **Subidas**: el último compás de la batería es un **redoble** de caja que acelera y crece, y el resto de la batería calla debajo.
+- La batería suena en todas las partes que la piden aunque su escena no tenga batería: trae la de la escena más ligera que la tenga. En **Electrónica**, la intro y la outro llevan bombo y percusión para que el DJ pueda mezclar, y la subida tiene batería para su redoble.
+- **Subidas**: con **Redoble al final**, el último compás de la batería es un **redoble** de caja que acelera y crece, y el resto de la batería calla debajo. Si quitas la batería de esa parte, no hay redoble.
 - **Cortes**: el último tiempo antes del drop va en silencio, para que el drop entre con fuerza.
 
 +++ Cómo elige
@@ -1561,7 +1565,7 @@ Para instrumentos grabados nota a nota (un piano, unas cuerdas):
 - Haz clic en un pad para escucharlo y seleccionarlo.
 - Arrastra uno o varios audios sobre los pads.
 - Por pad: **Tune**, **Length**, **Level**, **Pan** y grupo de **choke**: los pads del mismo grupo se cortan entre sí, como el hi-hat abierto y el cerrado.
-- **Kits ▾** carga un kit entero: el **Kit básico** (los sonidos de la Drum Machine) o uno de los diez kits por género de [[Sonidos de Pulse]].
+- **Kits** carga un kit entero: el **Kit básico** (los sonidos de la Drum Machine) o uno de los diez kits por género de [[Sonidos de Pulse]]. Si la pista aún se llama como al crearla («1 MIDI»), toma el nombre del kit («Kit Techno»).
 - **Trocear archivo…** corta un loop en los pads (ver [[Trocear y separar stems]]).
 
 ## Pulse Keys
@@ -1679,7 +1683,7 @@ Una wavetable es una serie de formas de onda por la que el oscilador se desplaza
 - **FX**: hasta 6 efectos propios, que se guardan con el preset.
 - **MATRIX**: 16 rutas de modulación (fuente, cantidad, destino).
 
-Trae 38 presets de fábrica por categorías: Bass, Lead, Pad, Pluck, Keys, Arp y FX (ver [[Presets]]). En varios, la **Macro 1** hace lo más útil del sonido: abre el filtro, cambia la vocal o da la profundidad del wobble.
+Trae 38 presets de fábrica por categorías: Bajo, Lead, Pad, Pluck, Teclas, Arpegio y FX (ver [[Presets]]). En varios, la **Macro 1** hace lo más útil del sonido: abre el filtro, cambia la vocal o da la profundidad del wobble.
 
 #### Wavetables propias
 
@@ -1835,13 +1839,15 @@ Un **retorno** es una pista de efectos compartida: varias pistas le mandan una p
 2. Para un retorno nuevo, usa **Crear › Retorno** ({⌥⌘T}) o el **+** a la derecha de los retornos. Aparece vacío, como «C Retorno».
 3. Ponle efectos en **Dispositivos** y súbele los envíos de las pistas que quieras.
 
+Para renombrarlo o cambiarle el color: clic derecho en su cabecera y escribe en **Nombre**. La letra se queda delante: escribe «Sala» y el retorno se llama «C Sala».
+
 Para quitar uno: clic derecho en su cabecera › **Eliminar retorno**.
 
 > Atención: al eliminar un retorno, las pistas dejan de enviarle sonido y se pierden su automatización de envío, sus envolventes de clip y los controles MIDI y macros que lo movían.
 
 +++ Detalles
 - Un proyecto puede tener hasta 12 retornos (de la A a la L), o ninguno.
-- Al eliminar uno, los retornos de después suben una letra, y los nombres que empiezan por su letra la cambian («C Delay» pasa a «B Delay»).
+- Al eliminar uno, los retornos de después suben una letra, y los nombres que empiezan por su letra la cambian («C Delay» pasa a «B Delay», y también uno que hayas renombrado, «C Sala» pasa a «B Sala»).
 - Un proyecto con dos retornos se sigue abriendo en versiones anteriores de Pulse. Con más o con menos, las anteriores piden actualizar.
 +++
 
@@ -2060,7 +2066,7 @@ El dibujo muestra las primeras reflexiones (rayas) y cómo cae la cola en graves
 
 **Presets** trae ajustes por uso: **Voces · Placa brillante**, **Batería · Habitación**, **Pads · Catedral**, **Ambiente · Infinito**, y los **Retorno · …**, con todo el sonido mojado, para un retorno.
 
-- En un retorno, deja **Dry/Wet** al 100 % y manda más o menos desde cada pista.
+- En un retorno entra con **Dry/Wet** al 100 %: déjalo así y manda más o menos desde cada pista. En una pista entra al 30 %. Lo mismo hacen la **Reverb** y el **Delay**.
 - Al cambiar el espacio, **Decay** o **Size**, Pulse calcula el espacio nuevo y pasa a él sin cortes en menos de medio segundo. Por eso esos tres no se automatizan; el resto sí.
 - Entra en mono y sale en estéreo: una pista a la izquierda tiene su reverb repartida por los dos lados, como en una sala.
 
@@ -2172,7 +2178,7 @@ El sonido «OTT» de la EDM: parte el sonido en graves, medios y agudos y, en ca
 ### Usarlo
 
 1. Ponlo en la pista (un pad, un lead, un bajo de future bass) o en un retorno.
-2. Empieza con **Depth** al 20–40 %: al 100 % es exagerado a propósito.
+2. Entra con **Depth** al 30 %, donde se suele empezar. Muévelo entre el 20 y el 40 %; al 100 % (el preset **OTT clásico**) es exagerado a propósito.
 3. Mueve **Time**: más corto es más agresivo y bombea; más largo, más suave.
 4. Ajusta el volumen con **Output** para comparar encendido y apagado.
 
@@ -2547,7 +2553,7 @@ La búsqueda de la biblioteca también los encuentra: prueba «bombo techno», �
 
 Cada kit llena los 16 pads con el orden de siempre: bombo en C1, aro, caja, palmada, una segunda caja, toms, charles cerrado y abierto (el cerrado corta al abierto), shaker, percusiones, crash, un efecto o acorde y ride.
 
-- En los **Drum Pads**, abre **Kits ▾** y elige uno. Pasa el ratón por encima para leer cómo suena.
+- En los **Drum Pads**, abre **Kits** y elige uno. Pasa el ratón por encima para leer cómo suena.
 - O en el navegador, en **Sonidos de Pulse › Kits**: doble clic carga el kit en la pista seleccionada, y arrastrarlo a una pista MIDI se lo pone a esa pista.
 
 | Kit | Cómo suena |

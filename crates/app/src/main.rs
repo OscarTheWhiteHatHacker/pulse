@@ -79,6 +79,8 @@ mod persist_tests;
 #[cfg(test)]
 mod tuner_tests;
 #[cfg(test)]
+mod voice_fx_tests;
+#[cfg(test)]
 mod tuning_tests;
 #[cfg(test)]
 mod structure_tests;

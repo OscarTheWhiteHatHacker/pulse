@@ -1005,10 +1005,10 @@ Lo que haces con las ruedas y los controles del teclado al grabar queda en el cl
 |---|---|---|
 | Pulse Synth, Super Saw, Acid Bass, Wavetable, Polychrome | Abre o cierra el filtro | Abre el filtro |
 | Sampler | Abre o cierra el filtro; hacia abajo oscurece aunque el filtro esté abierto | Abre el filtro |
-| FM Synth | Sube o baja el índice de modulación: más o menos armónicos | Más índice: brilla también en las notas largas |
-| Pulse Keys (pianos eléctricos) | Más o menos «bark» y un tono más brillante u oscuro | Trémolo |
+| FM Synth | Sube o baja el índice de modulación: más o menos armónicos, en la misma medida en todos los presets | Más índice: brilla también en las notas largas |
+| Pulse Keys (pianos eléctricos) | Más o menos «bark» y un tono más brillante u oscuro, sin saltar de volumen | Trémolo |
 | Pulse Keys (piano) | Realza o apaga los agudos | Trémolo |
-| Pulse Keys (órgano) | Abre o cierra el filtro de tono | Drive, como si apretaras el pedal de volumen |
+| Pulse Keys (órgano) | Saca o mete los registros agudos (de 4' para arriba) y abre o cierra el filtro de tono | Drive, como si apretaras el pedal de volumen |
 - El **Modular Synth** y los **plugins** reciben todos los controles y hacen lo que tengan asignado.
 - Al **exportar MIDI** se escriben; al **importar** un archivo MIDI, su bend, aftertouch y controles llegan como carriles.
 
@@ -2153,8 +2153,8 @@ Pulse trae seis de fábrica, hechas con sus presets:
 | **Voz · Radio** | Voz de teléfono o de radio vieja: solo los medios, saturada y en mono. |
 | **Bus de batería · Pegada** | Más ataque y una batería que suena junta. |
 | **Bajo · Sidechain y saturación** | Bajo caliente que bombea con el pulso y graves en mono. |
-| **Máster · Club** | Pegamento, brillo, graves en mono y un limitador que sube el volumen sin pasar de -0,3 dB. |
-| **Pad · Ancho y lejano** | Pad abierto y al fondo: chorus, delay y sala grande. |
+| **Máster · Club** | Pegamento, brillo, graves en mono y un limitador que sube el volumen sin pasar de -1 dB de pico real (lo que piden las plataformas de streaming). |
+| **Pad · Ancho y lejano** | Pad abierto y al fondo: chorus, delay y sala grande, ancho sin desaparecer en mono. |
 
 Para borrar una cadena tuya: clic derecho en ella › **Borrar la cadena**.
 
@@ -2409,7 +2409,7 @@ Cambia el tono de una voz y, por separado, sus formantes: el tamaño de la garga
 | **Niño** | Tono y formantes 5 semitonos arriba. |
 | **Coro de octava** | La octava de abajo mezclada con la voz. |
 | **Quinta arriba** | Una segunda voz una quinta por encima. |
-| **Doblado** | La voz 12 centésimas más aguda junto a la original: más gruesa. |
+| **Doblado** | La voz 10 centésimas más aguda, por debajo de la original: más gruesa. |
 
 +++ Detalles
 - Oye el periodo de la voz cada 5 ms (como el Tuner) y la parte en granos de dos periodos, centrados en cada pulso de la voz. Para cambiar el tono, los vuelve a poner más juntos o más separados; para cambiar los formantes, lee cada grano más rápido o más despacio.

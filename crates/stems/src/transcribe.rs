@@ -170,7 +170,13 @@ fn inferred_onsets(onsets: &Activations, frames: &Activations) -> Activations {
     let max_onset = onsets.iter().flatten().copied().fold(0.0f32, f32::max);
     let max_diff = diff.iter().flatten().copied().fold(0.0f32, f32::max);
     let scale = if max_diff > 0.0 { max_onset / max_diff } else { 0.0 };
-    onsets.iter().zip(&diff).map(|(o, d)| std::array::from_fn(|k| o[k].max(d[k] * scale))).collect()
+    // The largest jump becomes the largest onset exactly, not through the
+    // division: when they sit on neighbouring frames (often: the jump comes
+    // just before the peak) they tie, and so neither is a peak, on every CPU
+    // and thread count. Rounded, the tie went either way by one ulp, and the
+    // note's start moved by a frame.
+    let scaled = |d: f32| if max_diff > 0.0 && d == max_diff { max_onset } else { d * scale };
+    onsets.iter().zip(&diff).map(|(o, d)| std::array::from_fn(|k| o[k].max(scaled(d[k])))).collect()
 }
 
 /// Notes from the activations (`output_to_notes_polyphonic`, melodia trick included).
@@ -306,10 +312,16 @@ mod tests {
         numbers.chunks(4).map(|c| (c[0], c[1], c[2] as u8, c[3] as f32)).collect()
     }
 
-    /// On four threads, as on the two it ran on before: the very same
-    /// activations, so the same notes; and the shared model, the same again,
-    /// from memory the second time. On the reference melody and on chords
-    /// with noise over several windows.
+    /// On four threads, as on the two it ran on before: the same notes; and
+    /// the shared model, the same again, from memory the second time. On the
+    /// reference melody and on chords with noise over several windows.
+    ///
+    /// The activations agree to within rounding, not bit for bit. On Apple
+    /// Silicon they come out identical, but ONNX Runtime's x64 kernels (Windows
+    /// CI) split the sums per thread count. The largest difference is printed,
+    /// so a CI log says how far apart they are. The notes, which are what
+    /// Pulse gives the user, must match exactly (and amplitudes as near as
+    /// the sums allow).
     #[test]
     fn more_threads_give_the_same_notes() {
         let (melody, rate) = melody();
@@ -325,10 +337,24 @@ mod tests {
         let (mut before, mut now) = (Transcriber::load_on(2).unwrap(), Transcriber::load().unwrap());
         for (audio, rate) in [(melody, rate), (chords, RATE)] {
             let resampled = resample(&audio, rate, RATE);
-            let (a, b) = (before.activations(&resampled, &mut |_| true).unwrap(), now.activations(&resampled, &mut |_| true).unwrap());
-            assert!(a == b);
+            let ((frames_a, onsets_a), (frames_b, onsets_b)) = (before.activations(&resampled, &mut |_| true).unwrap(), now.activations(&resampled, &mut |_| true).unwrap());
+            assert_eq!((frames_a.len(), onsets_a.len()), (frames_b.len(), onsets_b.len()));
+            let largest = frames_a.iter().chain(&onsets_a).zip(frames_b.iter().chain(&onsets_b)).flat_map(|(x, y)| x.iter().zip(y).map(|(x, y)| (x - y).abs())).fold(0.0f32, f32::max);
+            eprintln!("activations on 2 and {} threads: largest difference {largest:e}", threads());
+            if cfg!(all(target_os = "macos", target_arch = "aarch64")) {
+                assert_eq!(largest, 0.0, "Apple Silicon gave identical activations");
+            } else {
+                // Ten times what one thread against several was measured at (3e-5, see `threads`).
+                assert!(largest < 3e-4, "activations differ by {largest:e}");
+            }
             let notes = now.notes(&audio, rate, |_| true).unwrap();
             assert!(!notes.is_empty());
+            let theirs = before.notes(&audio, rate, |_| true).unwrap();
+            let timing = |notes: &[NoteEvent]| notes.iter().map(|n| (n.start, n.end, n.pitch)).collect::<Vec<_>>();
+            assert_eq!(timing(&theirs), timing(&notes), "the notes depend on the thread count");
+            for (x, y) in theirs.iter().zip(&notes) {
+                assert!((x.amplitude - y.amplitude).abs() < 1e-4, "{x:?} vs {y:?}");
+            }
             assert_eq!(transcribe(&audio, rate, |_| true).unwrap(), notes);
             // From memory: nothing is analysed, so there is no progress to tell.
             let mut told = 0;
@@ -468,5 +494,21 @@ mod tests {
         assert!((frame_time(86) - 86.0 * 256.0 / 22050.0).abs() < 1e-12);
         // From frame 172 on, the window offset is taken off.
         assert!(frame_time(172) < 172.0 * 256.0 / 22050.0);
+    }
+
+    /// On one thread the network's sums round another way (see `threads`),
+    /// as they do on other CPUs: the notes must not move. The reference
+    /// melody's G, whose largest jump and onset peak are neighbours, started
+    /// a frame late here (and on GitHub's M1 runner) before their tie was made exact.
+    #[test]
+    fn one_thread_finds_the_same_notes() {
+        let (audio, rate) = melody();
+        let (one, usual) = (Transcriber::load_on(1).unwrap().notes(&audio, rate, |_| true).unwrap(), Transcriber::load().unwrap().notes(&audio, rate, |_| true).unwrap());
+        // Where and which notes, exactly; how strong, as near as the sums allow.
+        let timing = |notes: &[NoteEvent]| notes.iter().map(|n| (n.start, n.end, n.pitch)).collect::<Vec<_>>();
+        assert_eq!(timing(&one), timing(&usual));
+        for (a, b) in one.iter().zip(&usual) {
+            assert!((a.amplitude - b.amplitude).abs() < 1e-4, "{a:?} vs {b:?}");
+        }
     }
 }

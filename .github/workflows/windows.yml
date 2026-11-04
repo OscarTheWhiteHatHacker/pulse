@@ -42,6 +42,10 @@ jobs:
       # Actions pinned to a commit (their tag in the comment): a moved tag can't
       # change what runs here.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # The tags too: the package's version comes from the last one
+          # (git describe), not from Cargo.toml's placeholder.
+          fetch-depth: 0
 
       # The Rust of rust-toolchain.toml (rustup installs it on first use), as in
       # every other build.
@@ -54,6 +58,7 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
 
       - name: Compilar (todo el workspace)
+        id: compilar
         run: cargo build --release --locked --workspace --all-targets 2>&1 | Tee-Object -FilePath build.log; if ($LASTEXITCODE) { exit $LASTEXITCODE }
 
       # Lint for information only: the code keeps its own hand style (no rustfmt,
@@ -69,15 +74,34 @@ jobs:
           Select-String -Path tests.log -Pattern '^test result|FAILED|panicked' | ForEach-Object { $_.Line }
           exit $code
 
+      # From here on, the steps also run when a test failed (the job still
+      # fails, because of the Tests step): a red test must not hide whether
+      # Pulse packages, renders, starts and installs. They need the build, and
+      # the ones after packaging need the package.
       - name: Instalar Inno Setup
+        if: ${{ !cancelled() && steps.compilar.outcome == 'success' }}
         run: choco install innosetup -y --no-progress
 
       - name: Empaquetar
+        id: paquete
+        if: ${{ !cancelled() && steps.compilar.outcome == 'success' }}
         run: |
           $version = '${{ github.event.inputs.version }}'
           if ($version) { pwsh scripts/package-windows.ps1 -Version $version } else { pwsh scripts/package-windows.ps1 }
 
+      - name: Sumas SHA-256
+        if: ${{ !cancelled() && steps.paquete.outcome == 'success' }}
+        run: |
+          Push-Location dist
+          # With "\n" line ends (not Set-Content's CRLF), so `shasum -c` and
+          # `sha256sum -c` read it on macOS and Linux too.
+          $lines = Get-ChildItem -File | Where-Object { $_.Name -like '*.zip' -or $_.Name -like '*-setup.exe' } | ForEach-Object { "$((Get-FileHash $_.Name -Algorithm SHA256).Hash.ToLower())  $($_.Name)" }
+          [IO.File]::WriteAllText((Join-Path (Get-Location) 'SHA256SUMS.txt'), (($lines -join "`n") + "`n"))
+          Get-Content SHA256SUMS.txt
+          Pop-Location
+
       - name: pulse.exe renderiza un proyecto
+        if: ${{ !cancelled() && steps.paquete.outcome == 'success' }}
         run: |
           $exe = 'dist\Pulse\pulse.exe'
           $out = Join-Path $env:RUNNER_TEMP 'demo con espacios ñ.wav'
@@ -88,7 +112,13 @@ jobs:
           if ($size -lt 100000) { throw "WAV demasiado pequeño" }
           Copy-Item $out dist\render-demo.wav
 
+      # continue-on-error: GitHub's runner has no GPU, and wgpu may need the
+      # WARP software adapter there (docs/WINDOWS_SUPPORT.md, item 5), which
+      # says nothing about real machines. A failure isn't hidden: the next
+      # step turns it into a warning on the run's summary page.
       - name: pulse.exe arranca su ventana (guion)
+        id: ventana
+        if: ${{ !cancelled() && steps.paquete.outcome == 'success' }}
         continue-on-error: true
         run: |
           $out = Join-Path (Get-Location) 'dist\arranque'
@@ -97,13 +127,23 @@ jobs:
           $env:PULSE_SCRIPT_OUT = $out
           $p = Start-Process -FilePath 'dist\Pulse\pulse.exe' -PassThru
           if (-not $p.WaitForExit(180000)) { Stop-Process -Id $p.Id -Force; throw 'Pulse no terminó el guion en 3 minutos' }
+          Write-Host "pulse.exe salió con $($p.ExitCode)"
+          # Pulse's own log first, and kept with the artifacts: if the script
+          # didn't run, it says why (it used to be printed only on success).
+          Get-ChildItem "$env:LOCALAPPDATA\Pulse\Logs" -ErrorAction SilentlyContinue | ForEach-Object { Get-Content $_.FullName; Copy-Item $_.FullName $out }
           Get-Content (Join-Path $out 'log.txt')
           Get-ChildItem $out -Filter *.ppm | ForEach-Object { python scripts\ppm.py $_.FullName ($_.FullName -replace '\.ppm$', '.png') }
           if (Select-String -Path (Join-Path $out 'log.txt') -Pattern 'ERROR' -Quiet) { throw 'El guion tuvo errores' }
           if (-not (Test-Path (Join-Path $out 'proyecto.json'))) { throw 'El guion no llegó al final' }
-          Get-ChildItem "$env:LOCALAPPDATA\Pulse\Logs" -ErrorAction SilentlyContinue | ForEach-Object { Get-Content $_.FullName }
+
+      - name: Aviso si la ventana no arrancó
+        # (!cancelled(): without a status function GitHub adds success(), and
+        # after a failed test the warning would never show.)
+        if: ${{ !cancelled() && steps.ventana.outcome == 'failure' }}
+        run: Write-Host "::warning title=La ventana de Pulse no arrancó::El paso «pulse.exe arranca su ventana (guion)» falló; el trabajo sigue por continue-on-error. Mira su registro y el artefacto registros-windows (dist/arranque)."
 
       - name: El instalador instala, asocia .pulse y desinstala
+        if: ${{ !cancelled() && steps.paquete.outcome == 'success' }}
         run: |
           $setup = Get-ChildItem dist -Filter 'Pulse-*-windows-x64-setup.exe' | Select-Object -First 1
           if (-not $setup) { throw 'No hay instalador' }
@@ -136,6 +176,7 @@ jobs:
           path: |
             dist/*.zip
             dist/*-setup.exe
+            dist/SHA256SUMS.txt
           if-no-files-found: warn
 
       - name: Guardar registros y capturas

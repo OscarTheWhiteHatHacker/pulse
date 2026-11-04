@@ -1,0 +1,41 @@
+# Roadmap
+
+> **Draft for the maintainer to confirm.** This lists known gaps and open
+> directions taken from the repository's own status documents. It's a picture
+> of where Pulse stands, not a list of promises or dates. What gets built is
+> decided in issues and pull requests.
+
+What Pulse does today: [README](../README.md#what-you-can-do). What changed in
+each version: [CHANGELOG](../CHANGELOG.md).
+
+## Platforms
+
+| Item | State | Source |
+|---|---|---|
+| Windows test suite green on CI | Red since 2026-10-29. On `main`: 3 tests fail on every run, 3 on some runs. The launch branch fixes 3, confirmed on Windows CI. It leaves 1 reproducible and 2 intermittent |
+| Scripted window start on Windows CI | Fails since it ran again on 2026-11-04 (Pulse exits without running the script; cause unknown) | [PLATFORM_SUPPORT.md](PLATFORM_SUPPORT.md#pruebas-que-fallan-en-windows) | [FIRST_CONTRIBUTIONS.md #3](FIRST_CONTRIBUTIONS.md#3-windows-audio-to-midi-with-any-number-of-threads) |
+| Windows tested on real hardware (audio, MIDI, plugins, display scaling) | Not done | [WINDOWS_SUPPORT.md](WINDOWS_SUPPORT.md#pendiente-de-verificar-en-windows) |
+| Windows packages attached to releases | Not yet | [BUILD_WINDOWS.md](BUILD_WINDOWS.md) |
+| Windows code signing (Authenticode) | No certificate | [WINDOWS_SUPPORT.md](WINDOWS_SUPPORT.md#limitaciones-conocidas) |
+| ASIO on Windows | Not enabled (needs Steinberg's SDK and license) | [WINDOWS_SUPPORT.md](WINDOWS_SUPPORT.md#limitaciones-conocidas) |
+| macOS notarization (Apple Developer ID) | Not done: self-signed certificate | [INSTALL_MACOS.md](INSTALL_MACOS.md) |
+| Intel Macs | Not built | `rust-toolchain.toml` targets `aarch64-apple-darwin` only |
+| Linux | Not supported. First step: make it compile | [FIRST_CONTRIBUTIONS.md #4](FIRST_CONTRIBUTIONS.md#4-cargo-check-on-linux) |
+
+## Reach
+
+| Item | State |
+|---|---|
+| English (and other languages) in the interface | No localization layer: UI strings are Spanish literals |
+| English user guide | `docs/guia.md` is Spanish only |
+| Demo video | Not recorded yet: [DEMO_VIDEO_PLAN.md](DEMO_VIDEO_PLAN.md) |
+
+## Music features
+
+New music features are chosen as the project goes, favouring tools that work
+from analysis of your own audio (the direction behind audio to MIDI, the
+chord track and the mixing assistant). No list is committed yet.
+
+<!-- MAINTAINER: add the next planned features here when decided. -->
+
+Ideas are welcome as [feature requests](https://github.com/davidfdzmorilla/pulse/issues/new?template=02-feature-request.yml).

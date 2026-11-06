@@ -12,7 +12,7 @@ pub const CONTROL: Color32 = Color32::from_rgb(0x3d, 0x3d, 0x3d);
 pub const CONTROL_HOVER: Color32 = Color32::from_rgb(0x4a, 0x4a, 0x4a);
 pub const LINE: Color32 = Color32::from_rgb(0x1f, 0x1f, 0x1f);
 pub const TEXT: Color32 = Color32::from_rgb(0xd8, 0xd8, 0xd8);
-pub const TEXT_DIM: Color32 = Color32::from_rgb(0x8c, 0x8c, 0x8c);
+pub const TEXT_DIM: Color32 = Color32::from_rgb(0xa0, 0xa0, 0xa0);
 pub const ACCENT: Color32 = Color32::from_rgb(0xff, 0xa8, 0x24);
 /// Frozen tracks (see `freeze`): ice blue.
 /// Input monitoring buttons.
@@ -286,5 +286,40 @@ mod key_tests {
         assert_eq!(named_keys("⌘,"), "Ctrl+,");
         assert_eq!(named_keys("⌫"), "Supr");
         assert_eq!(named_keys("Sin atajos"), "Sin atajos");
+    }
+}
+
+#[cfg(test)]
+mod contrast_tests {
+    use super::*;
+
+    /// WCAG 2.x relative-luminance contrast ratio between two colors.
+    /// Larger is more readable; 4.5:1 is the AA threshold for normal text.
+    fn contrast(a: Color32, b: Color32) -> f32 {
+        let channel = |c: u8| {
+            let c = c as f32 / 255.0;
+            if c <= 0.04045 { c / 12.92 } else { ((c + 0.055) / 1.055).powf(2.4) }
+        };
+        let luminance = |c: Color32| 0.2126 * channel(c.r()) + 0.7152 * channel(c.g()) + 0.0722 * channel(c.b());
+        let (hi, lo) = {
+            let (la, lb) = (luminance(a), luminance(b));
+            if la >= lb { (la, lb) } else { (lb, la) }
+        };
+        (hi + 0.05) / (lo + 0.05)
+    }
+
+    /// Secondary text must be readable on every surface it is drawn on.
+    #[test]
+    fn text_dim_reaches_aa_contrast_on_bg_panel_and_surface() {
+        for (name, background) in [("BG", BG), ("PANEL", PANEL), ("SURFACE", SURFACE)] {
+            let ratio = contrast(TEXT_DIM, background);
+            assert!(ratio >= 4.5, "TEXT_DIM against {name} is {ratio:.2}:1, below the 4.5:1 AA minimum");
+        }
+    }
+
+    /// Dim text must still read as secondary, clearly dimmer than `TEXT`.
+    #[test]
+    fn text_dim_is_clearly_dimmer_than_text() {
+        assert!(contrast(TEXT_DIM, BG) < contrast(TEXT, BG));
     }
 }

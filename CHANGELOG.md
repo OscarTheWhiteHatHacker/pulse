@@ -45,6 +45,9 @@ still in `0.x`, so any release may change things.
 
 ### Fixed
 
+- Secondary text (`TEXT_DIM`) was too dark to read on some surfaces (WCAG
+  AA contrast below 4.5:1 against `SURFACE`); it's now a lighter grey that
+  stays clearly dimmer than regular text.
 - Audio to MIDI (Basic Pitch): the start of a note could move by one frame
   (≈12 ms) depending on the processor or the number of threads, when the
   largest jump and the onset peak fell on neighbouring frames. It's now the

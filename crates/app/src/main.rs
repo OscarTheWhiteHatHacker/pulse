@@ -173,6 +173,21 @@ fn attach_console() {
     unsafe { AttachConsole(ATTACH_PARENT_PROCESS) };
 }
 
+/// The command line's usage, in the same Spanish as the rest of the app.
+fn usage() -> &'static str {
+    concat!(
+        "Uso: pulse [opciones] [proyecto.pulse]\n",
+        "\n",
+        "Opciones:\n",
+        "  --version                         Imprime la versión y sale.\n",
+        "  --render <salida.wav> [proyecto.pulse]\n",
+        "                                    Renderiza el proyecto a WAV y sale.\n",
+        "  --check-editors                   Comprueba los editores instalados.\n",
+        "  --check-menus                     Comprueba los menús (solo macOS).\n",
+        "  -h, --help                        Muestra esta ayuda.\n",
+    )
+}
+
 fn main() -> eframe::Result {
     let args: Vec<String> = std::env::args().collect();
     // What this build is (scripts/bundle.sh checks it is the one just built):
@@ -181,6 +196,12 @@ fn main() -> eframe::Result {
         #[cfg(windows)]
         attach_console();
         println!("{}", updates::VERSION);
+        return Ok(());
+    }
+    if matches!(args.get(1).map(String::as_str), Some("--help" | "-h")) {
+        #[cfg(windows)]
+        attach_console();
+        print!("{}", usage());
         return Ok(());
     }
     logs::install();
@@ -227,6 +248,15 @@ fn main() -> eframe::Result {
             println!("{line}");
         }
         return Ok(());
+    }
+
+    // An unknown flag (starting with `--`) is an error: someone scripting a
+    // render must get one, not a silent GUI. A plain argument (a
+    // double-clicked `.pulse` file) still opens the app.
+    if let Some(arg) = args.get(1).filter(|arg| arg.starts_with("--")) {
+        eprintln!("pulse: opción no reconocida: {arg}");
+        eprint!("{}", usage());
+        std::process::exit(2);
     }
 
     #[allow(unused_mut)]
